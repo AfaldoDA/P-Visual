@@ -1,4 +1,3 @@
-using System;
 using System.Data;
 using System.Linq;
 using System.Windows.Forms;
@@ -6,6 +5,8 @@ using Dapper;
 using ZXing;
 using ZXing.Common;
 using System.Drawing;
+using ZXing.Rendering;
+
 
 
 namespace GuestRegistrationApp
@@ -17,16 +18,24 @@ namespace GuestRegistrationApp
         private DataGridView? dataGridView;
         private Button? btnSave;
         private Button? btnDelete;
-        // private PictureBox? picBarcode; 
+        private int? selectedGuestId = null;
+        private Button? btnEdit;  
+        private PictureBox? picBarcode;
+        private Button? btnGenerateBarcode;
+
+
+        
         public Form1()
         {
             this.Text = "Buku Undangan Digital";
             this.Size = new System.Drawing.Size(800, 644);
 
             InitControls();
-            DatabaseHelper.InitializeDatabase();
+            // DatabaseHelper.InitializeDatabase();
             LoadGuests();
             GenerateInvitationCode();
+            
+
         }
 
         private void InitControls()
@@ -48,15 +57,33 @@ namespace GuestRegistrationApp
             lblInvitationCode = new Label { Left = 150, Top = 140, Width = 200, Font = new Font("Segoe UI", 10),
         BackColor = Color.FromArgb(202, 211, 245) };
 
-            btnSave = new Button { Text = "Simpan", Left = 150, Top = 180, Width = 100,   };
+            btnSave = new Button { Text = "Simpan", Left = 150, Top = 180, Width = 100 };
             btnDelete = new Button { Text = "Hapus", Left = 270, Top = 180, Width = 100 };
-        // picBarcode = new PictureBox{Left = 150, Top = 440, Width = 200,Height = 80, BorderStyle = BorderStyle.FixedSingle};
-        //                             Controls.Add(picBarcode);
+            btnEdit = new Button { Text = "Edit", Left = 390, Top = 180, Width = 100 };
+            btnEdit.Click += btnEdit_Click;
+            Controls.Add(btnEdit);
+        
+      btnGenerateBarcode = new Button { Text = "Generate Barcode", Left = 510, Top = 180, Width = 100 };
+    picBarcode = new PictureBox
+    {
+        Left = 150,
+        Top = 440,
+        Width = 300,
+        Height = 100,
+        BorderStyle = BorderStyle.FixedSingle
+    };
 
 
+#pragma warning disable CS8602
 #pragma warning disable CS8622
             btnSave.Click += btnSave_Click;
             btnDelete.Click += btnDelete_Click;
+            Controls.Add(btnEdit);
+            btnEdit.Click += btnEdit_Click;
+            btnGenerateBarcode.Click += btnGenerateBarcode_Click;
+            dataGridView = new DataGridView { };
+            dataGridView.SelectionChanged += DataGridView_SelectionChanged;
+
 #pragma warning restore CS8622
 
             dataGridView = new DataGridView
@@ -72,7 +99,7 @@ namespace GuestRegistrationApp
                 BorderStyle = BorderStyle.FixedSingle,
                 EnableHeadersVisualStyles = false
             };
-
+            
             Controls.Add(lblName);
             Controls.Add(txtName);
             Controls.Add(lblAddress);
@@ -84,8 +111,10 @@ namespace GuestRegistrationApp
             Controls.Add(btnSave);
             Controls.Add(btnDelete);
             Controls.Add(dataGridView);
+            Controls.Add (btnGenerateBarcode);
+            Controls.Add (picBarcode);
         }
-
+    
         private void GenerateInvitationCode()
         {
             string code = "INV-" + DateTime.Now.ToString("yyyyMMdd") + "-" + Guid.NewGuid().ToString().Substring(0, 4).ToUpper();
@@ -117,12 +146,55 @@ namespace GuestRegistrationApp
                 ClearForm();
                 LoadGuests();
                 GenerateInvitationCode();
+                // GenerateBarcode(lblInvitationCode.Text);
             }
             catch (Exception ex)
             {
                 MessageBox.Show("Terjadi kesalahan: " + ex.Message);
             }
         }
+        private void btnGenerateBarcode_Click(object sender, EventArgs e)
+{
+    // Pastikan ada data tamu yang dipilih
+    if (dataGridView.SelectedRows.Count > 0)
+    {
+        var selectedRow = dataGridView.SelectedRows[0];
+        var guest = selectedRow.DataBoundItem as Guest;
+
+        if (guest != null)
+        {
+            // Menghasilkan barcode menggunakan InvitationCode tamu yang dipilih
+            GenerateBarcode(guest.InvitationCode!);
+        }
+        else
+        {
+            MessageBox.Show("Data tamu tidak valid.");
+        }
+    }
+    else
+    {
+        MessageBox.Show("Pilih data tamu untuk menghasilkan barcode.");
+    }
+}
+
+public void GenerateBarcode(string text)
+{
+    // Membuat instance BarcodeWriter dengan tipe output Bitmap
+    BarcodeWriter<Bitmap> barcodeWriter = new BarcodeWriter<Bitmap>
+    {
+        Format = BarcodeFormat.CODE_128,  // Jenis barcode, bisa diganti sesuai kebutuhan
+        // Renderer = new BitmapRenderer()   // Set renderer yang diperlukan
+    };
+
+    // Menulis barcode
+    Bitmap barcodeBitmap = barcodeWriter.Write(text);
+
+    // Menampilkan barcode ke PictureBox atau kontrol lain
+    picBarcode.Image = barcodeBitmap;  // Menggunakan picBarcode, bukan PictureBox
+}
+
+
+
 
         private void btnDelete_Click(object sender, EventArgs e)
         {
@@ -132,8 +204,8 @@ namespace GuestRegistrationApp
                 var guest = selectedRow.DataBoundItem as Guest;
             if (guest == null)
 {
-    MessageBox.Show("Data tamu tidak valid.");
-    return;
+                MessageBox.Show("Data tamu tidak valid.");
+                return;
 }
 
 
@@ -152,6 +224,55 @@ namespace GuestRegistrationApp
             else
             {
                 MessageBox.Show("Pilih salah satu baris untuk dihapus.");
+            }
+        }
+    private void btnEdit_Click(object? sender, EventArgs e)
+{
+    if (dataGridView!.SelectedRows.Count > 0)
+    {
+        var selectedRow = dataGridView.SelectedRows[0];
+        var guest = selectedRow.DataBoundItem as Guest;
+
+        if (guest == null)
+        {
+            MessageBox.Show("Data tamu tidak valid.");
+            return;
+        }
+
+        guest.Name = txtName!.Text;
+        guest.Address = txtAddress!.Text;
+        guest.Phone = txtPhone!.Text;
+
+        using (var conn = DatabaseHelper.GetConnection())
+        {
+            conn.Execute("UPDATE Guests SET Name = @Name, Address = @Address, Phone = @Phone WHERE Id = @Id", guest);
+        }
+
+        MessageBox.Show("Data tamu berhasil diperbarui!");
+        LoadGuests();
+        ClearForm();
+        GenerateInvitationCode();
+    }
+    else
+    {
+        MessageBox.Show("Pilih salah satu data untuk diperbarui.");
+    }
+}
+
+private void DataGridView_SelectionChanged(object? sender, EventArgs e)
+        {
+            if (dataGridView!.SelectedRows.Count > 0)
+            {
+                var selectedRow = dataGridView.SelectedRows[0];
+                var guest = selectedRow.DataBoundItem as Guest;
+                if (guest != null)
+                {
+                    txtName!.Text = guest.Name;
+                    txtAddress!.Text = guest.Address;
+                    txtPhone!.Text = guest.Phone;
+                    lblInvitationCode!.Text = guest.InvitationCode;
+                    selectedGuestId = guest.Id;
+                }
             }
         }
 
