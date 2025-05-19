@@ -2,10 +2,7 @@ using System.Data;
 using System.Linq;
 using System.Windows.Forms;
 using Dapper;
-using ZXing;
-using ZXing.Common;
-using System.Drawing;
-using ZXing.Rendering;
+using QRCoder;
 
 
 
@@ -66,11 +63,12 @@ namespace GuestRegistrationApp
       btnGenerateBarcode = new Button { Text = "Generate Barcode", Left = 510, Top = 180, Width = 100 };
     picBarcode = new PictureBox
     {
-        Left = 150,
-        Top = 440,
-        Width = 300,
-        Height = 100,
-        BorderStyle = BorderStyle.FixedSingle
+       Left = 150,
+    Top = 440,
+    Width = 200,
+    Height = 200,
+    BorderStyle = BorderStyle.FixedSingle,
+    SizeMode = PictureBoxSizeMode.Zoom
     };
 
 
@@ -179,18 +177,13 @@ namespace GuestRegistrationApp
 
 public void GenerateBarcode(string text)
 {
-    // Membuat instance BarcodeWriter dengan tipe output Bitmap
-    BarcodeWriter<Bitmap> barcodeWriter = new BarcodeWriter<Bitmap>
+    using (QRCodeGenerator qrGenerator = new QRCodeGenerator())
+    using (QRCodeData qrCodeData = qrGenerator.CreateQrCode(text, QRCodeGenerator.ECCLevel.Q))
+    using (QRCode qrCode = new QRCode(qrCodeData))
     {
-        Format = BarcodeFormat.CODE_128,  // Jenis barcode, bisa diganti sesuai kebutuhan
-        // Renderer = new BitmapRenderer()   // Set renderer yang diperlukan
-    };
-
-    // Menulis barcode
-    Bitmap barcodeBitmap = barcodeWriter.Write(text);
-
-    // Menampilkan barcode ke PictureBox atau kontrol lain
-    picBarcode.Image = barcodeBitmap;  // Menggunakan picBarcode, bukan PictureBox
+        Bitmap qrCodeImage = qrCode.GetGraphic(20);  
+        picBarcode!.Image = qrCodeImage;
+    }
 }
 
 
