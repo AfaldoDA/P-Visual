@@ -1,0 +1,8 @@
+D:\!TUGAS SMT 6\PemVis\Aldo\GuestRegistrationApp\obj\Debug\net9.0\GuestRegistrationApp.csproj.AssemblyReference.cache
+D:\!TUGAS SMT 6\PemVis\Aldo\GuestRegistrationApp\obj\Debug\net9.0\GuestRegistrationApp.GeneratedMSBuildEditorConfig.editorconfig
+D:\!TUGAS SMT 6\PemVis\Aldo\GuestRegistrationApp\obj\Debug\net9.0\GuestRegistrationApp.AssemblyInfoInputs.cache
+D:\!TUGAS SMT 6\PemVis\Aldo\GuestRegistrationApp\obj\Debug\net9.0\GuestRegistrationApp.AssemblyInfo.cs
+D:\!TUGAS SMT 6\PemVis\Aldo\GuestRegistrationApp\obj\Debug\net9.0\GuestRegistrationApp.csproj.CoreCompileInputs.cache
+D:\!TUGAS SMT 6\PemVis\Aldo\GuestRegistrationApp\obj\Debug\net9.0\GuestRegistrationApp.MvcApplicationPartsAssemblyInfo.cache
+D:\!TUGAS SMT 6\PemVis\Aldo\GuestRegistrationApp\obj\Debug\net9.0\GuestRegistrationApp.RazorAssemblyInfo.cache
+D:\!TUGAS SMT 6\PemVis\Aldo\GuestRegistrationApp\obj\Debug\net9.0\GuestRegistrationApp.RazorAssemblyInfo.cs
